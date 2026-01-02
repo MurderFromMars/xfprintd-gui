@@ -37,12 +37,16 @@ pub fn setup_application_ui(app: &Application) {
 
     window.show();
 
-    system::check_distribution_support(&window);
+    let window_clone = window.clone();
+    glib::idle_add_local(move || {
+        system::check_distribution_support(&window_clone);
 
-    info!("Performing system environment checks");
-    system::check_fprintd_service();
-    system::check_helper_tool();
-    system::check_pkexec_availability();
+        info!("Performing system environment checks");
+        system::check_fprintd_service();
+        system::check_helper_tool();
+        system::check_pkexec_availability();
+        glib::ControlFlow::Break
+    });
 
     let ctx = setup_ui_components(&window, rt, &builder);
 

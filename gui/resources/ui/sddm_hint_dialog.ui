@@ -69,6 +69,7 @@
 
                         <child>
                             <object class="GtkLabel" id="sddm_hint_message">
+                                <property name="vexpand">true</property>
                                 <property name="use-markup">true</property>
                                 <property name="wrap">true</property>
                                 <property name="justify">center</property>

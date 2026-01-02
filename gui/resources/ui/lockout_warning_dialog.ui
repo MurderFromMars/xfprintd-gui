@@ -80,6 +80,7 @@
                         <!-- Detailed warning -->
                         <child>
                             <object class="GtkLabel" id="detail_message">
+                                <property name="vexpand">true</property>
                                 <property name="use-markup">true</property>
                                 <property
                                     name="label"
