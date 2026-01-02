@@ -10,4 +10,3 @@ pub fn extract_widget<T: IsA<glib::Object>>(builder: &Builder, name: &str) -> T 
         .object(name)
         .unwrap_or_else(|| panic!("Failed to get widget with id '{}'", name))
 }
-

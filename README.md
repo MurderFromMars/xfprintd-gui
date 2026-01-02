@@ -39,7 +39,7 @@ When you enroll a fingerprint, you'll see live updates showing your progress:
 - **Real-time feedback** during fingerprint enrollment
 - **Smart retry guidance** when scans need improvement
 - **Safe fingerprint removal** with confirmation dialogs
-- **PAM configuration** for login, terminal, and sudo authentication
+- **PAM configuration** for terminal/sudo and system authentication prompts
 - **Modern GTK4 interface** that fits naturally in your desktop
 
 ## 💻 System Requirements

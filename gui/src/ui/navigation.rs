@@ -1,11 +1,10 @@
 //! Navigation buttons and dialogs functionality.
 
 use crate::config;
-use crate::pam::helper::is_sddm_enabled;
 use crate::ui::context::AppContext;
 use crate::ui::utils::extract_widget;
 use gtk4::prelude::*;
-use gtk4::{ApplicationWindow, Builder, Button, Window};
+use gtk4::{ApplicationWindow, Builder, Button};
 use log::info;
 
 /// Set up navigation buttons and dialogs.
@@ -16,7 +15,6 @@ pub fn setup_navigation_and_dialogs(
 ) {
     setup_navigation_buttons(ctx, builder);
     setup_info_button(window, builder);
-    setup_sddm_login_hint(window, builder);
 }
 
 /// Set up navigation buttons.
@@ -61,24 +59,6 @@ fn setup_info_button(window: &ApplicationWindow, builder: &Builder) {
     });
 }
 
-/// Set up SDDM login hint button if SDDM is detected.
-fn setup_sddm_login_hint(window: &ApplicationWindow, builder: &Builder) {
-    let login_info_btn: Button = extract_widget(builder, "login_info_btn");
-
-    if is_sddm_enabled() {
-        info!("SDDM detected - showing login info hint button");
-        login_info_btn.set_visible(true);
-        // Show popup with detailed instructions when clicked
-        let parent = window.clone();
-        login_info_btn.connect_clicked(move |_| {
-            show_sddm_hint(&parent);
-        });
-    } else {
-        info!("SDDM not detected - hiding login info hint button");
-        login_info_btn.set_visible(false);
-    }
-}
-
 /// Show the info dialog with credits and donation links.
 fn show_info_dialog(main_window: &ApplicationWindow) {
     let builder = Builder::from_resource(config::resources::dialogs::INFO);
@@ -95,22 +75,4 @@ fn show_info_dialog(main_window: &ApplicationWindow) {
     });
 
     info_window.show();
-}
-
-/// Show SDDM-specific fingerprint hint dialog.
-fn show_sddm_hint(parent: &ApplicationWindow) {
-    info!("Displaying SDDM fingerprint hint dialog");
-    let builder = Builder::from_resource(config::resources::dialogs::SDDM_HINT);
-
-    let window: Window = extract_widget(&builder, "sddm_hint_window");
-    let close_button: Button = extract_widget(&builder, "sddm_hint_close_button");
-
-    window.set_transient_for(Some(parent));
-
-    let window_clone = window.clone();
-    close_button.connect_clicked(move |_| {
-        window_clone.close();
-    });
-
-    window.show();
 }

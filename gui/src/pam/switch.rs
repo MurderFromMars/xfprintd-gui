@@ -16,14 +16,7 @@ pub struct PamService {
 /// Available PAM services that can be configured.
 pub mod services {
     use super::PamService;
-    use crate::pam::helper::{get_login_path, POLKIT_PATH, SUDO_PATH};
-
-    pub fn login() -> PamService {
-        PamService {
-            name: "login",
-            path: get_login_path(),
-        }
-    }
+    use crate::pam::helper::{POLKIT_PATH, SUDO_PATH};
 
     pub const SUDO: PamService = PamService {
         name: "sudo",

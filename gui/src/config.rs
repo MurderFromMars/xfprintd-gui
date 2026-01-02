@@ -49,7 +49,6 @@ pub mod resources {
         pub const INFO: &str = "/xyz/xerolinux/xfprintd_gui/ui/info_dialog.ui";
         pub const LOCKOUT_WARNING: &str =
             "/xyz/xerolinux/xfprintd_gui/ui/lockout_warning_dialog.ui";
-        pub const SDDM_HINT: &str = "/xyz/xerolinux/xfprintd_gui/ui/sddm_hint_dialog.ui";
     }
 }
 

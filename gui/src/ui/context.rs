@@ -47,19 +47,14 @@ impl UiComponents {
 /// PAM authentication switches.
 #[derive(Clone)]
 pub struct PamSwitches {
-    pub login: Switch,
     pub term: Switch,
     pub prompt: Switch,
 }
 
 impl PamSwitches {
     /// Create PAM switches from individual switch widgets.
-    pub fn new(login: Switch, term: Switch, prompt: Switch) -> Self {
-        Self {
-            login,
-            term,
-            prompt,
-        }
+    pub fn new(term: Switch, prompt: Switch) -> Self {
+        Self { term, prompt }
     }
 }
 
@@ -90,4 +85,3 @@ impl FingerprintButtons {
         Self { add, delete }
     }
 }
-

@@ -9,64 +9,22 @@ pub struct PamHelper;
 /// PAM file paths (using configuration).
 pub const SUDO_PATH: &str = "/etc/pam.d/sudo";
 pub const POLKIT_PATH: &str = "/etc/pam.d/polkit-1";
-pub const LOGIN_PATH: &str = "/etc/pam.d/login";
-pub const SDDM_PATH: &str = "/etc/pam.d/sddm";
-
-/// Returns the appropriate login PAM path based on active display manager.
-/// Uses SDDM path if sddm.service is enabled, otherwise uses generic login path.
-pub fn get_login_path() -> &'static str {
-    if is_sddm_enabled() {
-        info!("SDDM is enabled, using {}", SDDM_PATH);
-        SDDM_PATH
-    } else {
-        info!("SDDM not detected, using {}", LOGIN_PATH);
-        LOGIN_PATH
-    }
-}
-
-/// Check if SDDM is enabled via systemd.
-pub fn is_sddm_enabled() -> bool {
-    match Command::new("systemctl")
-        .arg("is-enabled")
-        .arg("sddm.service")
-        .output()
-    {
-        Ok(output) => {
-            let result = output.status.success();
-            if result {
-                info!("systemctl reports sddm.service is enabled");
-            } else {
-                debug!("systemctl reports sddm.service is not enabled");
-            }
-            result
-        }
-        Err(e) => {
-            debug!("Failed to check sddm.service status: {}", e);
-            false
-        }
-    }
-}
 
 impl PamHelper {
-    /// Check configuration status for all services (batch operation).
-    /// Returns (login_configured, sudo_configured, polkit_configured).
-    pub fn check_all_configurations() -> (bool, bool, bool) {
-        info!("Checking fingerprint authentication status for all PAM services");
-        info!("Performing batch check of all PAM configurations");
-
-        let login_path = get_login_path();
-        info!("Using login path: {}", login_path);
+    /// Check configuration status for sudo and polkit services.
+    /// Returns (sudo_configured, polkit_configured).
+    pub fn check_sudo_and_polkit_configurations() -> (bool, bool) {
+        info!("Checking fingerprint authentication status for sudo and polkit PAM services");
+        info!("Performing batch check of PAM configurations");
 
         match Command::new(config::helper::BINARY_PATH)
             .arg("check")
-            .arg(login_path)
             .arg(SUDO_PATH)
             .arg(POLKIT_PATH)
             .output()
         {
             Ok(output) => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                let mut login = false;
                 let mut sudo = false;
                 let mut polkit = false;
 
@@ -74,66 +32,47 @@ impl PamHelper {
 
                 for line in stdout.lines() {
                     if let Some(path) = line.strip_prefix("applied: ") {
-                        // Check both possible login paths
-                        if path == LOGIN_PATH || path == SDDM_PATH {
-                            login = true;
-                            info!("Login PAM configuration: ENABLED ({})", path);
-                        } else {
-                            match path {
-                                SUDO_PATH => {
-                                    sudo = true;
-                                    info!("Sudo PAM configuration: ENABLED");
-                                }
-                                POLKIT_PATH => {
-                                    polkit = true;
-                                    info!("Polkit PAM configuration: ENABLED");
-                                }
-                                _ => {
-                                    debug!("Unknown PAM configuration found: {}", path);
-                                }
+                        match path {
+                            SUDO_PATH => {
+                                sudo = true;
+                                info!("Sudo PAM configuration: ENABLED");
+                            }
+                            POLKIT_PATH => {
+                                polkit = true;
+                                info!("Polkit PAM configuration: ENABLED");
+                            }
+                            _ => {
+                                debug!("Unknown PAM configuration found: {}", path);
                             }
                         }
                     } else if let Some(path) = line.strip_prefix("not-applied: ") {
-                        // Check both possible login paths
-                        if path == LOGIN_PATH || path == SDDM_PATH {
-                            info!("Login PAM configuration: DISABLED ({})", path);
-                        } else {
-                            match path {
-                                SUDO_PATH => info!("Sudo PAM configuration: DISABLED"),
-                                POLKIT_PATH => info!("Polkit PAM configuration: DISABLED"),
-                                _ => debug!("Unknown PAM path not configured: {}", path),
-                            }
+                        match path {
+                            SUDO_PATH => info!("Sudo PAM configuration: DISABLED"),
+                            POLKIT_PATH => info!("Polkit PAM configuration: DISABLED"),
+                            _ => debug!("Unknown PAM path not configured: {}", path),
                         }
                     }
                 }
 
                 let exit_code = output.status.code().unwrap_or(-1);
                 info!("PAM batch check completed (exit code: {})", exit_code);
-                info!(
-                    "Final PAM status: login={}, sudo={}, polkit={}",
-                    login, sudo, polkit
-                );
-                (login, sudo, polkit)
+                info!("Final PAM status: sudo={}, polkit={}", sudo, polkit);
+                (sudo, polkit)
             }
             Err(e) => {
                 warn!("Batch PAM check failed: {}", e);
                 warn!("Fallback to individual service checks");
                 warn!("Using fallback method: checking PAM configurations individually");
 
-                let login_path = get_login_path();
-                let login = Self::is_configured(login_path);
                 let sudo = Self::is_configured(SUDO_PATH);
                 let polkit = Self::is_configured(POLKIT_PATH);
 
                 info!(
-                    "Individual PAM check results: login={}, sudo={}, polkit={}",
-                    login, sudo, polkit
+                    "Individual PAM check results: sudo={}, polkit={}",
+                    sudo, polkit
                 );
-                info!(
-                    "Final PAM status: login={}, sudo={}, polkit={}",
-                    login, sudo, polkit
-                );
-                (login, sudo, polkit)
+                info!("Final PAM status: sudo={}, polkit={}", sudo, polkit);
+                (sudo, polkit)
             }
         }
     }

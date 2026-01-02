@@ -17,7 +17,6 @@ pub struct FingerprintContext {
     pub enrolled: Rc<RefCell<HashSet<String>>>,
 }
 
-
 impl FingerprintContext {
     /// Create a new fingerprint context from pre-assembled components.
     pub fn new(
@@ -35,14 +34,11 @@ impl FingerprintContext {
 
     /// Check if any PAM switches are active.
     pub fn has_active_pam_switches(&self) -> bool {
-        self.ui.switches.login.is_active()
-            || self.ui.switches.term.is_active()
-            || self.ui.switches.prompt.is_active()
+        self.ui.switches.term.is_active() || self.ui.switches.prompt.is_active()
     }
 
     /// Enable or disable all PAM switches based on fingerprint availability.
     pub fn set_pam_switches_sensitive(&self, sensitive: bool) {
-        self.ui.switches.login.set_sensitive(sensitive);
         self.ui.switches.term.set_sensitive(sensitive);
         self.ui.switches.prompt.set_sensitive(sensitive);
     }

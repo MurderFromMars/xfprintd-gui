@@ -8,17 +8,8 @@ use log::info;
 pub fn setup_pam_switches(ctx: &AppContext) {
     info!("Checking current PAM configurations for switches initialization");
 
-    let (login_configured, sudo_configured, polkit_configured) =
-        PamHelper::check_all_configurations();
+    let (sudo_configured, polkit_configured) = PamHelper::check_sudo_and_polkit_configurations();
 
-    info!(
-        "PAM Login Authentication: {}",
-        if login_configured {
-            "ENABLED"
-        } else {
-            "DISABLED"
-        }
-    );
     info!(
         "PAM Sudo Authentication: {}",
         if sudo_configured {
@@ -39,11 +30,6 @@ pub fn setup_pam_switches(ctx: &AppContext) {
     ctx.fingerprint_ctx
         .ui
         .switches
-        .login
-        .set_active(login_configured);
-    ctx.fingerprint_ctx
-        .ui
-        .switches
         .term
         .set_active(sudo_configured);
     ctx.fingerprint_ctx
@@ -60,11 +46,6 @@ pub fn setup_pam_switches(ctx: &AppContext) {
 
 /// Set up PAM switch event handlers using generic implementation.
 fn setup_pam_switch_handlers(ctx: &AppContext) {
-    pam_switch::setup_pam_switch(
-        &ctx.fingerprint_ctx.ui.switches.login,
-        pam_switch::services::login(),
-    );
-
     pam_switch::setup_pam_switch(
         &ctx.fingerprint_ctx.ui.switches.term,
         pam_switch::services::SUDO,

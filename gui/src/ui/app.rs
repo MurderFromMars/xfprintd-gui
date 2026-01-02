@@ -108,18 +108,16 @@ fn setup_ui_components(
     let action_label = extract_widget(builder, "action_label");
     let button_add = extract_widget(builder, "button_add");
     let button_delete = extract_widget(builder, "button_delete");
-    let sw_login = extract_widget(builder, "sw_login");
     let sw_term = extract_widget(builder, "sw_term");
     let sw_prompt = extract_widget(builder, "sw_prompt");
 
     info!("All UI components successfully initialized from Glade builder");
 
     // Assemble UI components using builder pattern
-    let switches = crate::ui::context::PamSwitches::new(sw_login, sw_term, sw_prompt);
+    let switches = crate::ui::context::PamSwitches::new(sw_term, sw_prompt);
     let labels = crate::ui::context::FingerprintLabels::new(finger_label, action_label);
     let buttons = crate::ui::context::FingerprintButtons::new(button_add, button_delete);
-    let ui =
-        crate::ui::context::UiComponents::new(fingers_flow, stack, switches, labels, buttons);
+    let ui = crate::ui::context::UiComponents::new(fingers_flow, stack, switches, labels, buttons);
 
     let selected_finger = std::rc::Rc::new(std::cell::RefCell::new(None));
     let fingerprint_ctx = FingerprintContext::new(rt, ui, selected_finger);
