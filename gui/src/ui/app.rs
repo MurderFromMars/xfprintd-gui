@@ -1,6 +1,9 @@
 //! Application setup and initialization functionality.
 
+use crate::config;
 use crate::core::{system, FingerprintContext};
+use crate::ui::context::AppContext;
+use crate::ui::utils::extract_widget;
 use crate::ui::{button_handlers, fingerprint_ui, navigation, pam_ui};
 use adw::prelude::*;
 use adw::Application;
@@ -10,12 +13,6 @@ use log::{info, warn};
 
 use std::sync::Arc;
 use tokio::runtime::Runtime;
-
-/// Main application context with UI elements and runtime.
-#[derive(Clone)]
-pub struct AppContext {
-    pub fingerprint_ctx: FingerprintContext,
-}
 
 /// Initialize and set up main application UI.
 pub fn setup_application_ui(app: &Application) {
@@ -32,7 +29,7 @@ pub fn setup_application_ui(app: &Application) {
     setup_resources_and_theme();
 
     // Create single builder for all UI components
-    let builder = Builder::from_resource("/xyz/xerolinux/xfprintd_gui/ui/main.ui");
+    let builder = Builder::from_resource(config::resources::MAIN_UI);
     let window = create_main_window(app, &builder);
 
     window.show();
@@ -72,10 +69,10 @@ fn setup_resources_and_theme() {
         let theme = gtk4::IconTheme::for_display(&display);
         // Don't inherit system icon themes
         theme.set_search_path(&[]);
-        theme.add_resource_path("/xyz/xerolinux/xfprintd_gui/icons");
+        theme.add_resource_path(config::resources::ICONS);
 
         let css_provider = CssProvider::new();
-        css_provider.load_from_resource("/xyz/xerolinux/xfprintd_gui/css/style.css");
+        css_provider.load_from_resource(config::resources::CSS);
         gtk4::style_context_add_provider_for_display(
             &display,
             &css_provider,
@@ -98,13 +95,6 @@ fn create_main_window(app: &Application, builder: &Builder) -> ApplicationWindow
     window
 }
 
-/// Helper to extract widgets from builder with consistent error handling.
-pub fn extract_widget<T: IsA<glib::Object>>(builder: &Builder, name: &str) -> T {
-    builder
-        .object(name)
-        .unwrap_or_else(|| panic!("Failed to get {}", name))
-}
-
 /// Set up UI components and return application context.
 fn setup_ui_components(
     _window: &ApplicationWindow,
@@ -125,14 +115,14 @@ fn setup_ui_components(
     info!("All UI components successfully initialized from Glade builder");
 
     // Assemble UI components using builder pattern
-    let switches = crate::core::context::PamSwitches::new(sw_login, sw_term, sw_prompt);
-    let labels = crate::core::context::FingerprintLabels::new(finger_label, action_label);
-    let buttons = crate::core::context::FingerprintButtons::new(button_add, button_delete);
+    let switches = crate::ui::context::PamSwitches::new(sw_login, sw_term, sw_prompt);
+    let labels = crate::ui::context::FingerprintLabels::new(finger_label, action_label);
+    let buttons = crate::ui::context::FingerprintButtons::new(button_add, button_delete);
     let ui =
-        crate::core::context::UiComponents::new(fingers_flow, stack, switches, labels, buttons);
+        crate::ui::context::UiComponents::new(fingers_flow, stack, switches, labels, buttons);
 
     let selected_finger = std::rc::Rc::new(std::cell::RefCell::new(None));
     let fingerprint_ctx = FingerprintContext::new(rt, ui, selected_finger);
 
-    AppContext { fingerprint_ctx }
+    AppContext::new(fingerprint_ctx)
 }

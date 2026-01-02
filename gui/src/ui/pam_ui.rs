@@ -1,7 +1,7 @@
 //! PAM authentication switches UI functionality.
 
 use crate::pam::{helper::PamHelper, switch as pam_switch};
-use crate::ui::app::AppContext;
+use crate::ui::context::AppContext;
 use log::info;
 
 /// Set up PAM authentication switches.

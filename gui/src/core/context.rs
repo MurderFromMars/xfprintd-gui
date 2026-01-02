@@ -1,7 +1,7 @@
 //! Shared context structures for fingerprint operations.
 
+use crate::ui::context::UiComponents;
 use gtk4::prelude::*;
-use gtk4::{Button, FlowBox, Label, Stack, Switch};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -17,81 +17,6 @@ pub struct FingerprintContext {
     pub enrolled: Rc<RefCell<HashSet<String>>>,
 }
 
-/// UI components grouped by functionality.
-#[derive(Clone)]
-pub struct UiComponents {
-    pub flow: FlowBox,
-    pub stack: Stack,
-    pub switches: PamSwitches,
-    pub labels: FingerprintLabels,
-    pub buttons: FingerprintButtons,
-}
-
-/// PAM authentication switches.
-#[derive(Clone)]
-pub struct PamSwitches {
-    pub login: Switch,
-    pub term: Switch,
-    pub prompt: Switch,
-}
-
-/// Fingerprint-related labels.
-#[derive(Clone)]
-pub struct FingerprintLabels {
-    pub finger: Label,
-    pub action: Label,
-}
-
-/// Fingerprint operation buttons.
-#[derive(Clone)]
-pub struct FingerprintButtons {
-    pub add: Button,
-    pub delete: Button,
-}
-
-impl UiComponents {
-    /// Create UI components from individual widgets.
-    pub fn new(
-        flow: FlowBox,
-        stack: Stack,
-        switches: PamSwitches,
-        labels: FingerprintLabels,
-        buttons: FingerprintButtons,
-    ) -> Self {
-        Self {
-            flow,
-            stack,
-            switches,
-            labels,
-            buttons,
-        }
-    }
-}
-
-impl PamSwitches {
-    /// Create PAM switches from individual switch widgets.
-    pub fn new(login: Switch, term: Switch, prompt: Switch) -> Self {
-        Self {
-            login,
-            term,
-            prompt,
-        }
-    }
-}
-
-impl FingerprintLabels {
-    /// Create fingerprint labels from individual label widgets.
-    pub fn new(finger: Label, action: Label) -> Self {
-        Self { finger, action }
-    }
-}
-
-impl FingerprintButtons {
-    /// Create fingerprint buttons from individual button widgets.
-    pub fn new(add: Button, delete: Button) -> Self {
-        Self { add, delete }
-    }
-}
 
 impl FingerprintContext {
     /// Create a new fingerprint context from pre-assembled components.

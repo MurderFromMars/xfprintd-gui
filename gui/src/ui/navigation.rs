@@ -1,7 +1,9 @@
 //! Navigation buttons and dialogs functionality.
 
+use crate::config;
 use crate::pam::helper::is_sddm_enabled;
-use crate::ui::app::{extract_widget, AppContext};
+use crate::ui::context::AppContext;
+use crate::ui::utils::extract_widget;
 use gtk4::prelude::*;
 use gtk4::{ApplicationWindow, Builder, Button, Window};
 use log::info;
@@ -79,7 +81,7 @@ fn setup_sddm_login_hint(window: &ApplicationWindow, builder: &Builder) {
 
 /// Show the info dialog with credits and donation links.
 fn show_info_dialog(main_window: &ApplicationWindow) {
-    let builder = Builder::from_resource("/xyz/xerolinux/xfprintd_gui/ui/info_dialog.ui");
+    let builder = Builder::from_resource(config::resources::dialogs::INFO);
 
     let info_window: gtk4::Window = extract_widget(&builder, "info_window");
 
@@ -98,7 +100,7 @@ fn show_info_dialog(main_window: &ApplicationWindow) {
 /// Show SDDM-specific fingerprint hint dialog.
 fn show_sddm_hint(parent: &ApplicationWindow) {
     info!("Displaying SDDM fingerprint hint dialog");
-    let builder = Builder::from_resource("/xyz/xerolinux/xfprintd_gui/ui/sddm_hint_dialog.ui");
+    let builder = Builder::from_resource(config::resources::dialogs::SDDM_HINT);
 
     let window: Window = extract_widget(&builder, "sddm_hint_window");
     let close_button: Button = extract_widget(&builder, "sddm_hint_close_button");

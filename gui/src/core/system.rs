@@ -1,5 +1,5 @@
 use crate::core::util;
-use crate::ui::app::extract_widget;
+use crate::ui::utils::extract_widget;
 use gtk4::prelude::*;
 use gtk4::{ApplicationWindow, Builder, Button, Label};
 use log::{error, info};
@@ -15,7 +15,7 @@ pub fn check_distribution_support(main_window: &ApplicationWindow) {
         error!("Visit https://xerolinux.xyz/ to learn more about XeroLinux");
 
         // Load error dialog from UI file
-        let builder = Builder::from_resource("/xyz/xerolinux/xfprintd_gui/ui/error_dialog.ui");
+        let builder = Builder::from_resource(crate::config::resources::dialogs::ERROR);
 
         let error_window: gtk4::Window = extract_widget(&builder, "error_window");
 

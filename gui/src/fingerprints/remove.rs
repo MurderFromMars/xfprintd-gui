@@ -2,7 +2,7 @@
 
 use crate::core::context::FingerprintContext;
 use crate::core::device_manager::{DeviceError, DeviceManager};
-use crate::ui::app::extract_widget;
+use crate::ui::utils::extract_widget;
 
 use gtk4::glib;
 
@@ -63,8 +63,7 @@ pub fn start_removal(finger_key: String, ctx: FingerprintContext) {
 fn show_lockout_warning_dialog(finger_key: String, ctx: FingerprintContext) {
     info!("Showing lockout warning dialog - last fingerprint with active auth toggles");
 
-    let builder =
-        gtk4::Builder::from_resource("/xyz/xerolinux/xfprintd_gui/ui/lockout_warning_dialog.ui");
+    let builder = gtk4::Builder::from_resource(crate::config::resources::dialogs::LOCKOUT_WARNING);
     let dialog: Window = extract_widget(&builder, "lockout_warning_window");
 
     // Get parent window for modal behavior

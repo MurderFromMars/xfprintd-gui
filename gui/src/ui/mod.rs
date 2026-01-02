@@ -9,9 +9,11 @@
 
 pub mod app;
 pub mod button_handlers;
+pub mod context;
 pub mod fingerprint_ui;
 pub mod navigation;
 pub mod pam_ui;
+pub mod utils;
 
 // Re-export commonly used items
 pub use app::setup_application_ui;

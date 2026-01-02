@@ -1,7 +1,7 @@
 //! Fingerprint management UI functionality.
 
 use crate::core::{fprintd, util, FingerprintContext};
-use crate::ui::app::AppContext;
+use crate::ui::context::AppContext;
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::{

@@ -32,6 +32,27 @@ pub mod helper {
     pub const BINARY_PATH: &str = "/opt/xfprintd-gui/xfprintd-gui-helper";
 }
 
+/// UI resource paths for GResource files.
+pub mod resources {
+    /// Main application window UI.
+    pub const MAIN_UI: &str = "/xyz/xerolinux/xfprintd_gui/ui/main.ui";
+
+    /// Icons resource path.
+    pub const ICONS: &str = "/xyz/xerolinux/xfprintd_gui/icons";
+
+    /// CSS stylesheet resource path.
+    pub const CSS: &str = "/xyz/xerolinux/xfprintd_gui/css/style.css";
+
+    /// Dialog UI resources.
+    pub mod dialogs {
+        pub const ERROR: &str = "/xyz/xerolinux/xfprintd_gui/ui/error_dialog.ui";
+        pub const INFO: &str = "/xyz/xerolinux/xfprintd_gui/ui/info_dialog.ui";
+        pub const LOCKOUT_WARNING: &str =
+            "/xyz/xerolinux/xfprintd_gui/ui/lockout_warning_dialog.ui";
+        pub const SDDM_HINT: &str = "/xyz/xerolinux/xfprintd_gui/ui/sddm_hint_dialog.ui";
+    }
+}
+
 /// Get color scheme for UI feedback.
 pub fn colors() -> &'static ColorScheme {
     &COLORS

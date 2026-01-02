@@ -2,7 +2,7 @@
 
 use crate::core::FingerprintContext;
 use crate::fingerprints::{enroll, remove};
-use crate::ui::app::AppContext;
+use crate::ui::context::AppContext;
 use gtk4::prelude::*;
 use gtk4::Button;
 use log::info;
