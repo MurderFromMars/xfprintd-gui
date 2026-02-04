@@ -4,38 +4,7 @@ use gtk4::prelude::*;
 use gtk4::{ApplicationWindow, Builder, Button, Label};
 use log::{error, info};
 
-/// Check if current distribution is supported and show error dialog if not.
-pub fn check_distribution_support(main_window: &ApplicationWindow) {
-    info!("Checking Linux distribution compatibility");
-    if !util::is_supported_distribution() {
-        error!("Unsupported distribution detected");
-        let distro_name = util::get_distribution_name().unwrap_or_else(|| "Unknown".to_string());
-        error!("Current distribution: {}", distro_name);
-        error!("This application is designed specifically for XeroLinux");
-        error!("Visit https://xerolinux.xyz/ to learn more about XeroLinux");
 
-        // Load error dialog from UI file
-        let builder = Builder::from_resource(crate::config::resources::dialogs::ERROR);
-
-        let error_window: gtk4::Window = extract_widget(&builder, "error_window");
-
-        let distro_label: Label = extract_widget(&builder, "distro_label");
-
-        let ok_button: Button = extract_widget(&builder, "ok_button");
-
-        distro_label.set_label(&format!("Current distribution: {}", distro_name));
-        error_window.set_transient_for(Some(main_window));
-        let main_window_clone = main_window.clone();
-        ok_button.connect_clicked(move |_| {
-            main_window_clone.close();
-            std::process::exit(1);
-        });
-
-        error_window.show();
-    } else {
-        info!("XeroLinux detected - proceeding with application startup");
-    }
-}
 
 /// Check fprintd service status.
 pub fn check_fprintd_service() {
