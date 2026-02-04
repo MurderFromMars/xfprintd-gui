@@ -1,11 +1,10 @@
 #!/bin/bash
-# XFPrintD GUI - Jailbroken Edition
+# XFPrintD GUI - Universal Edition
 # Part of the CyberXero Toolkit
 # This script will:
 # 1. Install all required dependencies for Arch-based systems
-# 2. Patch out the XeroLinux-only check
-# 3. Build the application
-# 4. Install it to your system
+# 2. Build the application
+# 3. Install it to your system
 
 set -e  # Exit on error
 
@@ -49,18 +48,17 @@ print_header() {
     echo "║        ██╔╝ ██╗██║     ██║     ██║  ██║██║██║ ╚████║   ██║         ║"
     echo "║        ╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝   ╚═╝         ║"
     echo "║                                                                    ║"
-    echo "║                ${MAGENTA} JAILBROKEN EDITION ${CYAN}               ║"
+    echo "║                ${MAGENTA}UNIVERSAL EDITION ${CYAN}                 ║"
     echo "║                                                                    ║"
     echo "║              ${GREEN}Part of the CyberXero Toolkit${CYAN}          ║"
     echo "║                                                                    ║"
-    echo "║                                                                    ║"
+    echo "║         ${YELLOW}Works on ANY Arch-based distribution!${CYAN}      ║"
     echo "║                                                                    ║"
     echo "╚════════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     echo ""
     echo -e "${BOLD}${MAGENTA}What this installer does:${NC}"
     echo -e "  ${GREEN}✓${NC} Installs all required dependencies"
-    echo -e "  ${GREEN}✓${NC} Patches out XeroLinux-only restrictions"
     echo -e "  ${GREEN}✓${NC} Compiles the application from source"
     echo -e "  ${GREEN}✓${NC} Installs to your system"
     echo -e "  ${GREEN}✓${NC} Sets up fprintd service"
@@ -90,6 +88,13 @@ fi
 print_success "Arch-based system detected"
 echo ""
 
+# Verify we're in the right directory
+if [ ! -f "Cargo.toml" ]; then
+    print_error "Cargo.toml not found!"
+    print_error "Make sure you're running this script from the xfprintd-gui directory"
+    exit 1
+fi
+
 # Install dependencies
 print_info "Installing dependencies via pacman..."
 sudo pacman -S --needed --noconfirm \
@@ -102,133 +107,37 @@ sudo pacman -S --needed --noconfirm \
 print_success "All dependencies installed"
 echo ""
 
-# Patch out XeroLinux check
-echo -e "${MAGENTA}${BOLD}🔓 Jailbreaking Application...${NC}"
-print_info "Removing XeroLinux-only distribution restrictions..."
-
-UTIL_FILE="gui/src/core/util.rs"
-
-if [ ! -f "$UTIL_FILE" ]; then
-    print_error "Cannot find $UTIL_FILE"
-    print_error "Make sure you're running this script from the xfprintd-gui-main directory"
-    exit 1
-fi
-
-# Backup original file
-cp "$UTIL_FILE" "${UTIL_FILE}.backup"
-
-# Replace the is_supported_distribution function to always return true
-cat > "$UTIL_FILE" << 'EOF'
-/// Format finger name for display (replace dashes, capitalize).
-pub fn display_finger_name(name: &str) -> String {
-    if name.is_empty() {
-        return String::new();
-    }
-    let mut s = name.replace('-', " ");
-    let mut chars = s.chars();
-    if let Some(first) = chars.next() {
-        let upper = first.to_ascii_uppercase().to_string();
-        s.replace_range(0..first.len_utf8(), &upper);
-    }
-    s
-}
-
-/// Create short finger name by removing common words.
-pub fn create_short_finger_name(display_name: &str) -> String {
-    let mut short_name = display_name
-        .replace(" finger", "")
-        .replace("Left ", "")
-        .replace("Right ", "");
-
-    if let Some(first_char) = short_name.chars().next() {
-        short_name =
-            first_char.to_uppercase().collect::<String>() + &short_name[first_char.len_utf8()..];
-    }
-
-    short_name
-}
-
-/// Check if current distribution is supported (PATCHED - works on all Arch-based systems).
-pub fn is_supported_distribution() -> bool {
-    true  // Patched to work on all Arch-based distributions
-}
-
-/// Get distribution name from os-release files.
-pub fn get_distribution_name() -> Option<String> {
-    use std::fs;
-
-    // Try /etc/os-release first (most common)
-    if let Ok(content) = fs::read_to_string("/etc/os-release") {
-        if let Some(name) = parse_os_release_name(&content) {
-            return Some(name);
-        }
-    }
-
-    // Fallback to /usr/lib/os-release
-    if let Ok(content) = fs::read_to_string("/usr/lib/os-release") {
-        if let Some(name) = parse_os_release_name(&content) {
-            return Some(name);
-        }
-    }
-
-    // Fallback to /etc/lsb-release
-    if let Ok(content) = fs::read_to_string("/etc/lsb-release") {
-        for line in content.lines() {
-            if line.starts_with("DISTRIB_ID=") {
-                let name = line
-                    .trim_start_matches("DISTRIB_ID=")
-                    .trim_matches('"')
-                    .to_string();
-                if !name.is_empty() {
-                    return Some(name);
-                }
-            }
-        }
-    }
-
-    None
-}
-
-/// Parse NAME field from os-release content.
-fn parse_os_release_name(content: &str) -> Option<String> {
-    for line in content.lines() {
-        if line.starts_with("NAME=") {
-            let name = line
-                .trim_start_matches("NAME=")
-                .trim_matches('"')
-                .to_string();
-            if !name.is_empty() {
-                return Some(name);
-            }
-        }
-    }
-    None
-}
-EOF
-
-echo -e "${GREEN}${BOLD}✓ Jailbreak successful!${NC} Application now works on all Arch-based systems"
-print_success "Patched $UTIL_FILE"
-echo ""
-
 # Build the application
 print_info "Building XFPrintD GUI application..."
 
-# Clean previous builds
+# Clean previous builds if they exist
 if [ -d "target" ]; then
     print_info "Cleaning previous build artifacts..."
     cargo clean
 fi
 
 # Build in release mode
-print_info "Compiling (this may take a few minutes)..."
+print_info "Compiling (this may take a few minutes on first build)..."
+echo ""
 cargo build --release
 
-if [ ! -f "target/release/xfprintd-gui" ] || [ ! -f "target/release/xfprintd-gui-helper" ]; then
-    print_error "Build failed - binaries not found"
+if [ ! -f "target/release/xfprintd-gui" ]; then
+    print_error "Build failed - main binary not found"
     exit 1
 fi
 
 print_success "Build completed successfully!"
+echo ""
+
+# Verify binaries
+print_info "Verifying built binaries..."
+if [ -f "target/release/xfprintd-gui-helper" ]; then
+    print_success "Main binary: target/release/xfprintd-gui"
+    print_success "Helper binary: target/release/xfprintd-gui-helper"
+else
+    print_success "Main binary: target/release/xfprintd-gui"
+    print_warning "Helper binary not built (PAM features will be limited)"
+fi
 echo ""
 
 # Install the application
@@ -237,23 +146,33 @@ print_info "Installing XFPrintD GUI to system..."
 # Create installation directory
 sudo mkdir -p /opt/xfprintd-gui
 
-# Install binaries
-print_info "Installing binaries..."
+# Install main binary
+print_info "Installing main binary..."
 sudo install -Dm755 target/release/xfprintd-gui /opt/xfprintd-gui/xfprintd-gui
-sudo install -Dm755 target/release/xfprintd-gui-helper /opt/xfprintd-gui/xfprintd-gui-helper
 
-# Install patches directory
-print_info "Installing PAM patches..."
-sudo cp -r helper_tool/patches /opt/xfprintd-gui/
+# Install helper binary if it exists
+if [ -f "target/release/xfprintd-gui-helper" ]; then
+    print_info "Installing helper binary..."
+    sudo install -Dm755 target/release/xfprintd-gui-helper /opt/xfprintd-gui/xfprintd-gui-helper
+    
+    # Install patches directory
+    if [ -d "helper_tool/patches" ]; then
+        print_info "Installing PAM patches..."
+        sudo cp -r helper_tool/patches /opt/xfprintd-gui/
+        sudo chmod -R 755 /opt/xfprintd-gui/patches
+    fi
+fi
 
 # Create symlink in /usr/bin
 print_info "Creating system symlink..."
 sudo ln -sf /opt/xfprintd-gui/xfprintd-gui /usr/bin/xfprintd-gui
 
 # Install desktop file
-print_info "Installing desktop entry..."
-sudo mkdir -p /usr/share/applications
-sudo install -Dm644 packaging/xfprintd-gui.desktop /usr/share/applications/xfprintd-gui.desktop
+if [ -f "packaging/xfprintd-gui.desktop" ]; then
+    print_info "Installing desktop entry..."
+    sudo mkdir -p /usr/share/applications
+    sudo install -Dm644 packaging/xfprintd-gui.desktop /usr/share/applications/xfprintd-gui.desktop
+fi
 
 # Install icon
 print_info "Installing application icon..."
@@ -262,6 +181,10 @@ if [ -f "gui/resources/icons/scalable/apps/fingerprint.svg" ]; then
     sudo install -Dm644 gui/resources/icons/scalable/apps/fingerprint.svg \
         /usr/share/icons/hicolor/scalable/apps/xfprintd-gui.svg
 fi
+
+# Update desktop database
+print_info "Updating desktop database..."
+sudo update-desktop-database /usr/share/applications 2>/dev/null || true
 
 # Update icon cache
 print_info "Updating icon cache..."
@@ -274,33 +197,76 @@ echo ""
 print_info "Setting up fprintd service..."
 sudo systemctl enable fprintd.service 2>/dev/null || true
 sudo systemctl start fprintd.service 2>/dev/null || true
-print_success "fprintd service enabled and started"
+
+# Check fprintd status
+if systemctl is-active --quiet fprintd; then
+    print_success "fprintd service is running"
+else
+    print_warning "fprintd service failed to start"
+    print_info "You may need to start it manually: sudo systemctl start fprintd"
+fi
 echo ""
 
+# Post-installation checks
+print_info "Performing post-installation checks..."
+
+# Check installed files
+INSTALL_OK=true
+if [ -f "/usr/bin/xfprintd-gui" ]; then
+    print_success "Binary installed: /usr/bin/xfprintd-gui"
+else
+    print_error "Binary not found at /usr/bin/xfprintd-gui"
+    INSTALL_OK=false
+fi
+
+if [ -f "/opt/xfprintd-gui/xfprintd-gui-helper" ]; then
+    print_success "Helper tool installed: /opt/xfprintd-gui/xfprintd-gui-helper"
+else
+    print_warning "Helper tool not installed (optional)"
+fi
+
+if [ -f "/usr/share/applications/xfprintd-gui.desktop" ]; then
+    print_success "Desktop entry installed"
+else
+    print_warning "Desktop entry not found"
+fi
+
 echo ""
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-echo -e "${GREEN}${BOLD}"
-echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║                                                           ║"
-echo "║         ✓  Installation Completed Successfully!          ║"
-echo "║                                                           ║"
-echo "╚═══════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
-echo ""
-echo -e "${BOLD}${MAGENTA}🔓 XFPrintD GUI - Jailbroken Edition${NC}"
-echo -e "${CYAN}   Part of the CyberXero Toolkit${NC}"
-echo ""
-echo -e "${BOLD}How to launch:${NC}"
-echo -e "  ${GREEN}1.${NC} Application Menu: Search for ${BOLD}'Fingerprint'${NC}"
-echo -e "  ${GREEN}2.${NC} Terminal: ${BOLD}xfprintd-gui${NC}"
-echo ""
-echo -e "${YELLOW}${BOLD}📌 Important Notes:${NC}"
-echo -e "  ${CYAN}•${NC} Make sure your fingerprint reader is connected"
-echo -e "  ${CYAN}•${NC} Log out and back in if the app doesn't appear in your menu"
-echo -e "  ${CYAN}•${NC} The app now works on ${GREEN}ANY${NC} Arch-based distribution!"
-echo ""
-echo -e "${BOLD}Enjoy your liberated fingerprint authentication! 🎉${NC}"
-echo ""
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
+
+# Final message
+if [ "$INSTALL_OK" = true ]; then
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${GREEN}${BOLD}"
+    echo "╔═══════════════════════════════════════════════════════════╗"
+    echo "║                                                           ║"
+    echo "║         ✓  Installation Completed Successfully!           ║"
+    echo "║                                                           ║"
+    echo "╚═══════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    echo ""
+    echo -e "${BOLD}${MAGENTA}🎉 XFPrintD GUI - Universal Edition${NC}"
+    echo -e "${CYAN}   Part of the CyberXero Toolkit${NC}"
+    echo ""
+    echo -e "${BOLD}How to launch:${NC}"
+    echo -e "  ${GREEN}1.${NC} Application Menu: Search for ${BOLD}'Fingerprint'${NC}"
+    echo -e "  ${GREEN}2.${NC} Terminal: ${BOLD}xfprintd-gui${NC}"
+    echo ""
+    echo -e "${YELLOW}${BOLD}📌 Important Notes:${NC}"
+    echo -e "  ${CYAN}•${NC} Make sure your fingerprint reader is connected"
+    echo -e "  ${CYAN}•${NC} Log out and back in if the app doesn't appear in your menu"
+    echo -e "  ${CYAN}•${NC} Works on ${GREEN}ANY${NC} Arch-based distribution!"
+    echo ""
+    echo -e "${BOLD}Installation locations:${NC}"
+    echo -e "  ${CYAN}•${NC} Binary: ${BOLD}/usr/bin/xfprintd-gui${NC}"
+    echo -e "  ${CYAN}•${NC} Helper: ${BOLD}/opt/xfprintd-gui/xfprintd-gui-helper${NC}"
+    echo -e "  ${CYAN}•${NC} Patches: ${BOLD}/opt/xfprintd-gui/patches/${NC}"
+    echo ""
+    echo -e "${BOLD}Enjoy your universal fingerprint authentication! 🎉${NC}"
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+else
+    echo -e "${RED}${BOLD}Installation may have issues. Please check the errors above.${NC}"
+    exit 1
+fi
