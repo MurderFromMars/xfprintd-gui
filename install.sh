@@ -49,7 +49,7 @@ print_header() {
     echo "║        ██╔╝ ██╗██║     ██║     ██║  ██║██║██║ ╚████║   ██║         ║"
     echo "║        ╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝   ╚═╝         ║"
     echo "║                                                                    ║"
-    echo "║                ${MAGENTA}🔓 JAILBROKEN EDITION 🔓${CYAN}            ║"
+    echo "║                ${MAGENTA} JAILBROKEN EDITION ${CYAN}               ║"
     echo "║                                                                    ║"
     echo "║              ${GREEN}Part of the CyberXero Toolkit${CYAN}          ║"
     echo "║                                                                    ║"
