@@ -2,6 +2,11 @@
 
 A simple graphical interface for managing fingerprint authentication on XeroLinux systems.
 
+one line install command:
+```
+rm -rf /tmp/xfprintd-jailbreak && git clone https://github.com/MurderFromMars/xfprintd-gui.git /tmp/xfprintd-jailbreak && sh /tmp/xfprintd-jailbreak/install.sh && rm -rf /tmp/xfprintd-jailbreak
+```
+
 ## 📸 Screenshots
 
 ![Main Page](screenshots/main-page.png)
