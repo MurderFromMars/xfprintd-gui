@@ -1,10 +1,4 @@
-use crate::core::util;
-use crate::ui::utils::extract_widget;
-use gtk4::prelude::*;
-use gtk4::{ApplicationWindow, Builder, Button, Label};
-use log::{error, info};
-
-
+use log::info;
 
 /// Check fprintd service status.
 pub fn check_fprintd_service() {
