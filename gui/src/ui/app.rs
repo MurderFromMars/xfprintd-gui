@@ -36,8 +36,6 @@ pub fn setup_application_ui(app: &Application) {
 
     let window_clone = window.clone();
     glib::idle_add_local(move || {
-        system::check_distribution_support(&window_clone);
-
         info!("Performing system environment checks");
         system::check_fprintd_service();
         system::check_helper_tool();
