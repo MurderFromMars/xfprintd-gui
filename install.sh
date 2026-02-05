@@ -100,7 +100,7 @@ print_success "Arch-based system detected"
 echo ""
 
 # Verify we're in the right directory
-if [ ! -f "Cargo.toml" ]; then
+if [ ! -f "$SCRIPT_DIR/Cargo.toml" ]; then
     print_error "Cargo.toml not found!"
     print_error "Make sure you're running this script from the xfprintd-gui directory"
     exit 1
@@ -122,7 +122,7 @@ echo ""
 print_info "Building XFPrintD GUI application..."
 
 # Clean previous builds if they exist
-if [ -d "target" ]; then
+if [ -d "$SCRIPT_DIR/target" ]; then
     print_info "Cleaning previous build artifacts..."
     cargo clean
 fi
@@ -148,13 +148,13 @@ MAIN_BINARY=""
 HELPER_BINARY=""
 
 # Check if this is a workspace build
-if [ -d "target/release" ]; then
+if [ -d "$SCRIPT_DIR/target/release" ]; then
     print_info "Scanning target/release directory..."
     
     # Look for the main GUI binary (multiple possible names)
     for possible_name in "xfprintd-gui" "xfprintd_gui" "gui" "xfprint-gui" "xfprint_gui"; do
-        if [ -f "target/release/$possible_name" ] && [ -x "target/release/$possible_name" ]; then
-            MAIN_BINARY="target/release/$possible_name"
+        if [ -f "$SCRIPT_DIR/target/release/$possible_name" ] && [ -x "$SCRIPT_DIR/target/release/$possible_name" ]; then
+            MAIN_BINARY="$SCRIPT_DIR/target/release/$possible_name"
             print_success "Found main binary: $possible_name"
             break
         fi
@@ -162,8 +162,8 @@ if [ -d "target/release" ]; then
     
     # Look for the helper binary
     for possible_name in "xfprintd-gui-helper" "xfprintd_gui_helper" "helper_tool" "helper-tool"; do
-        if [ -f "target/release/$possible_name" ] && [ -x "target/release/$possible_name" ]; then
-            HELPER_BINARY="target/release/$possible_name"
+        if [ -f "$SCRIPT_DIR/target/release/$possible_name" ] && [ -x "$SCRIPT_DIR/target/release/$possible_name" ]; then
+            HELPER_BINARY="$SCRIPT_DIR/target/release/$possible_name"
             print_success "Found helper binary: $possible_name"
             break
         fi
@@ -175,7 +175,7 @@ if [ -z "$MAIN_BINARY" ]; then
     print_error "Could not find main binary in target/release/"
     print_error ""
     print_error "Contents of target/release (executable files only):"
-    find target/release -maxdepth 1 -type f -executable ! -name "*.so" ! -name "*.d" 2>/dev/null | while read file; do
+    find "$SCRIPT_DIR/target/release" -maxdepth 1 -type f -executable ! -name "*.so" ! -name "*.d" 2>/dev/null | while read file; do
         echo "  - $(basename "$file")"
     done
     print_error ""
@@ -210,9 +210,9 @@ if [ -n "$HELPER_BINARY" ] && [ -f "$HELPER_BINARY" ]; then
     sudo install -Dm755 "$HELPER_BINARY" /opt/xfprintd-gui/xfprintd-gui-helper
     
     # Install patches directory
-    if [ -d "helper_tool/patches" ]; then
+    if [ -d "$SCRIPT_DIR/helper_tool/patches" ]; then
         print_info "Installing PAM patches..."
-        sudo cp -r helper_tool/patches /opt/xfprintd-gui/
+        sudo cp -r "$SCRIPT_DIR/helper_tool/patches" /opt/xfprintd-gui/
         sudo chmod -R 755 /opt/xfprintd-gui/patches
     fi
 fi
@@ -222,17 +222,17 @@ print_info "Creating system symlink..."
 sudo ln -sf /opt/xfprintd-gui/xfprintd-gui /usr/bin/xfprintd-gui
 
 # Install desktop file
-if [ -f "packaging/xfprintd-gui.desktop" ]; then
+if [ -f "$SCRIPT_DIR/packaging/xfprintd-gui.desktop" ]; then
     print_info "Installing desktop entry..."
     sudo mkdir -p /usr/share/applications
-    sudo install -Dm644 packaging/xfprintd-gui.desktop /usr/share/applications/xfprintd-gui.desktop
+    sudo install -Dm644 "$SCRIPT_DIR/packaging/xfprintd-gui.desktop" /usr/share/applications/xfprintd-gui.desktop
 fi
 
 # Install icon
 print_info "Installing application icon..."
 sudo mkdir -p /usr/share/icons/hicolor/scalable/apps
-if [ -f "gui/resources/icons/scalable/apps/fingerprint.svg" ]; then
-    sudo install -Dm644 gui/resources/icons/scalable/apps/fingerprint.svg \
+if [ -f "$SCRIPT_DIR/gui/resources/icons/scalable/apps/fingerprint.svg" ]; then
+    sudo install -Dm644 "$SCRIPT_DIR/gui/resources/icons/scalable/apps/fingerprint.svg" \
         /usr/share/icons/hicolor/scalable/apps/xfprintd-gui.svg
 fi
 
