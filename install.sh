@@ -1,10 +1,4 @@
 #!/bin/bash
-# XFPrintD GUI - Universal Edition
-# Part of the CyberXero Toolkit
-# This script will:
-# 1. Install all required dependencies for Arch-based systems
-# 2. Build the application
-# 3. Install it to your system
 
 set -e  # Exit on error
 
@@ -132,23 +126,66 @@ fi
 # Build in release mode
 print_info "Compiling (this may take a few minutes on first build)..."
 echo ""
-cargo build --release
+cargo build --release 2>&1 | tee /tmp/cargo_build.log
 
-if [ ! -f "target/release/xfprintd-gui" ]; then
-    print_error "Build failed - main binary not found"
+# Check build exit code
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    print_error "Cargo build failed!"
+    print_error "Check /tmp/cargo_build.log for details"
+    exit 1
+fi
+
+print_success "Cargo build completed!"
+echo ""
+
+# Find the actual binary name(s) - handling Cargo workspace
+print_info "Locating built binaries..."
+MAIN_BINARY=""
+HELPER_BINARY=""
+
+# Check if this is a workspace build
+if [ -d "target/release" ]; then
+    print_info "Scanning target/release directory..."
+    
+    # Look for the main GUI binary (multiple possible names)
+    for possible_name in "xfprintd-gui" "xfprintd_gui" "gui" "xfprint-gui" "xfprint_gui"; do
+        if [ -f "target/release/$possible_name" ] && [ -x "target/release/$possible_name" ]; then
+            MAIN_BINARY="target/release/$possible_name"
+            print_success "Found main binary: $possible_name"
+            break
+        fi
+    done
+    
+    # Look for the helper binary
+    for possible_name in "xfprintd-gui-helper" "xfprintd_gui_helper" "helper_tool" "helper-tool"; do
+        if [ -f "target/release/$possible_name" ] && [ -x "target/release/$possible_name" ]; then
+            HELPER_BINARY="target/release/$possible_name"
+            print_success "Found helper binary: $possible_name"
+            break
+        fi
+    done
+fi
+
+# If we still haven't found binaries, list what's actually there
+if [ -z "$MAIN_BINARY" ]; then
+    print_error "Could not find main binary in target/release/"
+    print_error ""
+    print_error "Contents of target/release (executable files only):"
+    find target/release -maxdepth 1 -type f -executable ! -name "*.so" ! -name "*.d" 2>/dev/null | while read file; do
+        echo "  - $(basename "$file")"
+    done
+    print_error ""
+    print_error "This is a Cargo workspace. Please check:"
+    print_error "  1. The [[bin]] name in gui/Cargo.toml"
+    print_error "  2. The [[bin]] name in helper_tool/Cargo.toml"
     exit 1
 fi
 
 print_success "Build completed successfully!"
-echo ""
-
-# Verify binaries
-print_info "Verifying built binaries..."
-if [ -f "target/release/xfprintd-gui-helper" ]; then
-    print_success "Main binary: target/release/xfprintd-gui"
-    print_success "Helper binary: target/release/xfprintd-gui-helper"
+print_success "Main binary: $MAIN_BINARY"
+if [ -n "$HELPER_BINARY" ]; then
+    print_success "Helper binary: $HELPER_BINARY"
 else
-    print_success "Main binary: target/release/xfprintd-gui"
     print_warning "Helper binary not built (PAM features will be limited)"
 fi
 echo ""
@@ -161,12 +198,12 @@ sudo mkdir -p /opt/xfprintd-gui
 
 # Install main binary
 print_info "Installing main binary..."
-sudo install -Dm755 target/release/xfprintd-gui /opt/xfprintd-gui/xfprintd-gui
+sudo install -Dm755 "$MAIN_BINARY" /opt/xfprintd-gui/xfprintd-gui
 
 # Install helper binary if it exists
-if [ -f "target/release/xfprintd-gui-helper" ]; then
+if [ -n "$HELPER_BINARY" ] && [ -f "$HELPER_BINARY" ]; then
     print_info "Installing helper binary..."
-    sudo install -Dm755 target/release/xfprintd-gui-helper /opt/xfprintd-gui/xfprintd-gui-helper
+    sudo install -Dm755 "$HELPER_BINARY" /opt/xfprintd-gui/xfprintd-gui-helper
     
     # Install patches directory
     if [ -d "helper_tool/patches" ]; then
