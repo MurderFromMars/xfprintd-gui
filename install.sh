@@ -2,6 +2,10 @@
 
 set -e  # Exit on error
 
+# Get the directory where this script lives and cd into it
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # Set TERM for non-interactive environments
 export TERM=${TERM:-xterm}
 
