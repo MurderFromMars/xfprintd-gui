@@ -8,6 +8,16 @@
 
 set -e  # Exit on error
 
+# Set TERM for non-interactive environments
+export TERM=${TERM:-xterm}
+
+# Detect if we're in an interactive terminal
+if [ -t 1 ]; then
+    INTERACTIVE=true
+else
+    INTERACTIVE=false
+fi
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -37,7 +47,10 @@ print_error() {
 
 # Print header
 print_header() {
-    clear
+    # Only clear screen if interactive
+    if [ "$INTERACTIVE" = true ]; then
+        clear
+    fi
     echo -e "${CYAN}${BOLD}"
     echo "╔════════════════════════════════════════════════════════════════════╗"
     echo "║                                                                    ║"
